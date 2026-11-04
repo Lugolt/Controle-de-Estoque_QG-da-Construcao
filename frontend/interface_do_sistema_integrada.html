@@ -1,0 +1,1075 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QG da Construção - Controle de Estoque</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        .active-tab {
+            background-color: #1e293b;
+            color: #ffffff;
+            border-left: 4px solid #f97316;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans antialiased">
+
+    <div class="flex h-screen overflow-hidden">
+        <aside class="w-64 bg-slate-900 text-slate-300 flex flex-col justify-between flex-shrink-0">
+            <div>
+                <div class="p-5 flex items-center gap-3 border-b border-slate-800">
+                    <i data-lucide="hard-hat" class="w-8 h-8 text-orange-500"></i>
+                    <div>
+                        <h1 class="font-bold text-lg text-white leading-tight">QG Construção</h1>
+                        <p class="text-xs text-slate-400">Controle de Estoque</p>
+                    </div>
+                </div>
+
+                <nav class="mt-6 flex flex-col gap-1 px-3">
+                    <button onclick="switchTab('dashboard')" id="tab-dashboard" class="nav-item flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium hover:bg-slate-800 transition active-tab">
+                        <i data-lucide="layout-dashboard" class="w-5 h-5"></i> Dashboard
+                    </button>
+                    <button onclick="switchTab('produtos')" id="tab-produtos" class="nav-item flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium hover:bg-slate-800 transition">
+                        <i data-lucide="package" class="w-5 h-5"></i> Produtos
+                    </button>
+                    <button onclick="switchTab('reativar')" id="tab-reativar" class="nav-item flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium hover:bg-slate-800 transition relative">
+                        <i data-lucide="archive-restore" class="w-5 h-5"></i> Reativar Produtos
+                        <span id="reativar-badge" class="ml-auto bg-slate-600 text-white text-xs px-2 py-0.5 rounded-full hidden">0</span>
+                    </button>
+                    <button onclick="switchTab('movimentacoes')" id="tab-movimentacoes" class="nav-item flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium hover:bg-slate-800 transition">
+                        <i data-lucide="arrow-left-right" class="w-5 h-5"></i> Movimentações
+                    </button>
+                    <button onclick="switchTab('compras')" id="tab-compras" class="nav-item flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium hover:bg-slate-800 transition">
+                        <i data-lucide="shopping-cart" class="w-5 h-5"></i> Compras
+                    </button>
+                    <button onclick="switchTab('fornecedores')" id="tab-fornecedores" class="nav-item flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium hover:bg-slate-800 transition">
+                        <i data-lucide="truck" class="w-5 h-5"></i> Fornecedores
+                    </button>
+                    <button onclick="switchTab('categorias')" id="tab-categorias" class="nav-item flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium hover:bg-slate-800 transition">
+                        <i data-lucide="tags" class="w-5 h-5"></i> Categorias
+                    </button>
+                    <button onclick="switchTab('alertas')" id="tab-alertas" class="nav-item flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium hover:bg-slate-800 transition relative">
+                        <i data-lucide="bell" class="w-5 h-5"></i> Alertas
+                        <span id="alert-badge" class="ml-auto bg-red-500 text-white text-xs px-2 py-0.5 rounded-full hidden">0</span>
+                    </button>
+                </nav>
+            </div>
+
+            <div class="p-4 border-t border-slate-800 text-xs text-slate-500 text-center">
+                QG da Construção &copy; 2026
+            </div>
+        </aside>
+
+        <main class="flex-1 overflow-y-auto p-8">
+            
+            <section id="view-dashboard" class="content-view">
+                <h2 class="text-2xl font-bold text-slate-800 mb-6">Visão Geral</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium text-slate-500">Total de Produtos</p>
+                            <h3 id="dash-total-produtos" class="text-2xl font-bold text-slate-800 mt-1">0</h3>
+                        </div>
+                        <div class="bg-orange-100 p-3 rounded-lg text-orange-600">
+                            <i data-lucide="package" class="w-6 h-6"></i>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium text-slate-500">Alertas de Estoque</p>
+                            <h3 id="dash-alertas-count" class="text-2xl font-bold text-red-600 mt-1">0</h3>
+                        </div>
+                        <div class="bg-red-100 p-3 rounded-lg text-red-600">
+                            <i data-lucide="alert-triangle" class="w-6 h-6"></i>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium text-slate-500">Fornecedores</p>
+                            <h3 id="dash-fornecedores-count" class="text-2xl font-bold text-slate-800 mt-1">0</h3>
+                        </div>
+                        <div class="bg-blue-100 p-3 rounded-lg text-blue-600">
+                            <i data-lucide="truck" class="w-6 h-6"></i>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium text-slate-500">Categorias</p>
+                            <h3 id="dash-categorias-count" class="text-2xl font-bold text-slate-800 mt-1">0</h3>
+                        </div>
+                        <div class="bg-green-100 p-3 rounded-lg text-green-600">
+                            <i data-lucide="tags" class="w-6 h-6"></i>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="view-produtos" class="content-view hidden">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-slate-800">Cadastro de Produtos</h2>
+                    <button onclick="openModal('modal-produto')" class="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition">
+                        <i data-lucide="plus" class="w-4 h-4"></i> Novo Produto
+                    </button>
+                </div>
+
+                <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                    <table class="w-full text-left text-sm text-slate-600">
+                        <thead class="bg-slate-50 border-b border-slate-200 text-slate-700 font-semibold uppercase text-xs">
+                            <tr>
+                                <th class="p-4">ID</th>
+                                <th class="p-4">Nome</th>
+                                <th class="p-4">Categoria</th>
+                                <th class="p-4">Quantidade</th>
+                                <th class="p-4">Preço Unit.</th>
+                                <th class="p-4 text-center">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="lista-produtos" class="divide-y divide-slate-100">
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="view-reativar" class="content-view hidden">
+                <div class="flex justify-between items-center mb-6 gap-4">
+                    <div>
+                        <h2 class="text-2xl font-bold text-slate-800">Produtos Desativados</h2>
+                        <p class="text-sm text-slate-500 mt-1">Produtos desativados não aparecem nas listagens nem podem ser movimentados. Reative para voltar a usá-los; o histórico e o saldo são preservados.</p>
+                    </div>
+                    <input type="search" id="reativar-busca" oninput="renderDesativados()" placeholder="Buscar por nome ou SKU"
+                        class="w-64 flex-shrink-0 border border-slate-300 rounded-lg p-2 text-sm focus:outline-none focus:border-orange-500">
+                </div>
+
+                <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                    <table class="w-full text-left text-sm text-slate-600">
+                        <thead class="bg-slate-50 border-b border-slate-200 text-slate-700 font-semibold uppercase text-xs">
+                            <tr>
+                                <th class="p-4">ID</th>
+                                <th class="p-4">Nome</th>
+                                <th class="p-4">Categoria</th>
+                                <th class="p-4">Saldo</th>
+                                <th class="p-4">Preço Unit.</th>
+                                <th class="p-4 text-center">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="lista-desativados" class="divide-y divide-slate-100"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="view-movimentacoes" class="content-view hidden">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-slate-800">Movimentações de Estoque</h2>
+                    <button onclick="openModal('modal-movimentacao')" class="bg-slate-800 hover:bg-slate-900 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition">
+                        <i data-lucide="plus-circle" class="w-4 h-4"></i> Registrar Movimentação
+                    </button>
+                </div>
+
+                <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                    <table class="w-full text-left text-sm text-slate-600">
+                        <thead class="bg-slate-50 border-b border-slate-200 text-slate-700 font-semibold uppercase text-xs">
+                            <tr>
+                                <th class="p-4">Data/Hora</th>
+                                <th class="p-4">Produto</th>
+                                <th class="p-4">Tipo</th>
+                                <th class="p-4">Qtd.</th>
+                                <th class="p-4">Observação</th>
+                            </tr>
+                        </thead>
+                        <tbody id="lista-movimentacoes" class="divide-y divide-slate-100">
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="view-alertas" class="content-view hidden">
+                <h2 class="text-2xl font-bold text-slate-800 mb-6">Alertas de Estoque Mínimo</h2>
+                <div id="lista-alertas" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                </div>
+            </section>
+
+            <section id="view-compras" class="content-view hidden">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-slate-800">Gestão de Compras</h2>
+                    <button onclick="openModal('modal-compra')" class="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition">
+                        <i data-lucide="plus" class="w-4 h-4"></i> Nova Compra
+                    </button>
+                </div>
+                <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                    <table class="w-full text-left text-sm text-slate-600">
+                        <thead class="bg-slate-50 border-b border-slate-200 text-slate-700 font-semibold uppercase text-xs">
+                            <tr>
+                                <th class="p-4">Nº</th>
+                                <th class="p-4">Data</th>
+                                <th class="p-4">Fornecedor</th>
+                                <th class="p-4">Nota Fiscal</th>
+                                <th class="p-4">Total</th>
+                                <th class="p-4 text-center">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="lista-compras" class="divide-y divide-slate-100"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="view-fornecedores" class="content-view hidden">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-slate-800">Fornecedores</h2>
+                    <button onclick="abrirFornecedor()" class="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition">
+                        <i data-lucide="plus" class="w-4 h-4"></i> Novo Fornecedor
+                    </button>
+                </div>
+                <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                    <table class="w-full text-left text-sm text-slate-600">
+                        <thead class="bg-slate-50 border-b border-slate-200 text-slate-700 font-semibold uppercase text-xs">
+                            <tr>
+                                <th class="p-4">ID</th>
+                                <th class="p-4">Nome</th>
+                                <th class="p-4">CNPJ</th>
+                                <th class="p-4">Telefone</th>
+                                <th class="p-4">E-mail</th>
+                                <th class="p-4 text-center">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="lista-fornecedores" class="divide-y divide-slate-100"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="view-categorias" class="content-view hidden">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-slate-800">Categorias</h2>
+                    <button onclick="abrirCategoria()" class="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition">
+                        <i data-lucide="plus" class="w-4 h-4"></i> Nova Categoria
+                    </button>
+                </div>
+                <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                    <table class="w-full text-left text-sm text-slate-600">
+                        <thead class="bg-slate-50 border-b border-slate-200 text-slate-700 font-semibold uppercase text-xs">
+                            <tr>
+                                <th class="p-4">ID</th>
+                                <th class="p-4">Nome</th>
+                                <th class="p-4">Descrição</th>
+                                <th class="p-4 text-center">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="lista-categorias" class="divide-y divide-slate-100"></tbody>
+                    </table>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <div id="modal-produto" class="fixed inset-0 bg-slate-900/50 hidden items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-xl p-6 w-full max-w-md shadow-xl max-h-[90vh] overflow-y-auto">
+            <h3 class="text-lg font-bold text-slate-800 mb-4">Adicionar Produto</h3>
+            <form id="form-produto" onsubmit="salvarProduto(event)">
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="mb-3 col-span-2">
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Nome do Produto *</label>
+                        <input type="text" id="prod-nome" required class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:outline-none focus:border-orange-500">
+                    </div>
+                    <div class="mb-3">
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">SKU</label>
+                        <input type="text" id="prod-sku" class="w-full border border-slate-300 rounded-lg p-2 text-sm">
+                    </div>
+                    <div class="mb-3">
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Unidade</label>
+                        <input type="text" id="prod-unidade" value="un" class="w-full border border-slate-300 rounded-lg p-2 text-sm">
+                    </div>
+                    <div class="mb-3">
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Preço de custo (R$)</label>
+                        <input type="number" min="0" step="0.01" id="prod-custo" class="w-full border border-slate-300 rounded-lg p-2 text-sm">
+                    </div>
+                    <div class="mb-3">
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Preço de venda (R$)</label>
+                        <input type="number" min="0" step="0.01" id="prod-venda" class="w-full border border-slate-300 rounded-lg p-2 text-sm">
+                    </div>
+                    <div class="mb-3">
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Estoque mínimo</label>
+                        <input type="number" min="0" step="1" id="prod-minimo" value="0" class="w-full border border-slate-300 rounded-lg p-2 text-sm">
+                    </div>
+                    <div class="mb-3">
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Estoque máximo</label>
+                        <input type="number" min="0" step="1" id="prod-maximo" class="w-full border border-slate-300 rounded-lg p-2 text-sm">
+                    </div>
+                    <div class="mb-3">
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Categoria</label>
+                        <select id="prod-categoria" class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:outline-none focus:border-orange-500"><option value="">Sem categoria</option></select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Fornecedor</label>
+                        <select id="prod-fornecedor" class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:outline-none focus:border-orange-500"><option value="">Sem fornecedor</option></select>
+                    </div>
+                    <div class="mb-3 col-span-2">
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Descrição</label>
+                        <input type="text" id="prod-descricao" class="w-full border border-slate-300 rounded-lg p-2 text-sm">
+                    </div>
+                </div>
+                <p class="text-xs text-slate-500 mt-1">O estoque inicial deve ser lançado depois em Movimentações, como uma entrada.</p>
+                <div class="flex justify-end gap-2 mt-5">
+                    <button type="button" onclick="closeModal('modal-produto')" class="px-4 py-2 text-sm text-slate-600 hover:bg-slate-100 rounded-lg">Cancelar</button>
+                    <button type="submit" class="px-4 py-2 text-sm bg-orange-600 text-white rounded-lg hover:bg-orange-700">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="modal-movimentacao" class="fixed inset-0 bg-slate-900/50 hidden items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-xl p-6 w-full max-w-md shadow-xl">
+            <h3 class="text-lg font-bold text-slate-800 mb-4">Registrar Movimentação</h3>
+            <form id="form-movimentacao" onsubmit="salvarMovimentacao(event)">
+                <div class="mb-3">
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Produto *</label>
+                    <select id="mov-produto" required class="w-full border border-slate-300 rounded-lg p-2 text-sm"></select>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="mb-3">
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Local *</label>
+                        <select id="mov-local" required class="w-full border border-slate-300 rounded-lg p-2 text-sm">
+                            <option value="deposito">Depósito</option><option value="loja">Loja</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Tipo *</label>
+                        <select id="mov-tipo" required class="w-full border border-slate-300 rounded-lg p-2 text-sm">
+                            <option value="ENTRADA">Entrada</option><option value="SAIDA">Saída</option><option value="PERDA">Perda</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Quantidade *</label>
+                    <input type="number" min="0.000001" step="any" id="mov-quantidade" required class="w-full border border-slate-300 rounded-lg p-2 text-sm">
+                </div>
+                <div class="mb-3">
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Observação</label>
+                    <input type="text" id="mov-observacao" class="w-full border border-slate-300 rounded-lg p-2 text-sm">
+                </div>
+                <div class="mb-3">
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Registrado por</label>
+                    <input type="text" id="mov-registrado-por" class="w-full border border-slate-300 rounded-lg p-2 text-sm">
+                </div>
+                <div class="flex justify-end gap-2 mt-5">
+                    <button type="button" onclick="closeModal('modal-movimentacao')" class="px-4 py-2 text-sm text-slate-600 hover:bg-slate-100 rounded-lg">Cancelar</button>
+                    <button type="submit" class="px-4 py-2 text-sm bg-slate-800 text-white rounded-lg hover:bg-slate-900">Registrar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="modal-fornecedor" class="fixed inset-0 bg-slate-900/50 hidden items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-xl p-6 w-full max-w-md shadow-xl">
+            <h3 id="forn-titulo" class="text-lg font-bold text-slate-800 mb-4">Adicionar Fornecedor</h3>
+            <form id="form-fornecedor" onsubmit="salvarFornecedor(event)">
+                <input type="hidden" id="forn-id">
+                <div class="mb-3">
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Nome *</label>
+                    <input type="text" id="forn-nome" required class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:outline-none focus:border-orange-500">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="mb-3">
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">CNPJ</label>
+                        <input type="text" id="forn-cnpj" class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:outline-none focus:border-orange-500">
+                    </div>
+                    <div class="mb-3">
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Telefone</label>
+                        <input type="text" id="forn-telefone" class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:outline-none focus:border-orange-500">
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">E-mail</label>
+                    <input type="email" id="forn-email" class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:outline-none focus:border-orange-500">
+                </div>
+                <div class="flex justify-end gap-2 mt-5">
+                    <button type="button" onclick="closeModal('modal-fornecedor')" class="px-4 py-2 text-sm text-slate-600 hover:bg-slate-100 rounded-lg">Cancelar</button>
+                    <button type="submit" class="px-4 py-2 text-sm bg-orange-600 text-white rounded-lg hover:bg-orange-700">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="modal-categoria" class="fixed inset-0 bg-slate-900/50 hidden items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-xl p-6 w-full max-w-md shadow-xl">
+            <h3 id="cat-titulo" class="text-lg font-bold text-slate-800 mb-4">Adicionar Categoria</h3>
+            <form id="form-categoria" onsubmit="salvarCategoria(event)">
+                <input type="hidden" id="cat-id">
+                <div class="mb-3">
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Nome *</label>
+                    <input type="text" id="cat-nome" required class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:outline-none focus:border-orange-500">
+                </div>
+                <div class="mb-3">
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Descrição</label>
+                    <input type="text" id="cat-descricao" class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:outline-none focus:border-orange-500">
+                </div>
+                <div class="flex justify-end gap-2 mt-5">
+                    <button type="button" onclick="closeModal('modal-categoria')" class="px-4 py-2 text-sm text-slate-600 hover:bg-slate-100 rounded-lg">Cancelar</button>
+                    <button type="submit" class="px-4 py-2 text-sm bg-orange-600 text-white rounded-lg hover:bg-orange-700">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="modal-compra" class="fixed inset-0 bg-slate-900/50 hidden items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-xl p-6 w-full max-w-3xl shadow-xl max-h-[90vh] overflow-y-auto">
+            <h3 class="text-lg font-bold text-slate-800 mb-4">Registrar Compra</h3>
+            <form id="form-compra" onsubmit="salvarCompra(event)">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div class="mb-3">
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Fornecedor *</label>
+                        <select id="compra-fornecedor" required class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:outline-none focus:border-orange-500"></select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Data *</label>
+                        <input type="date" id="compra-data" required class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:outline-none focus:border-orange-500">
+                    </div>
+                    <div class="mb-3">
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Nota Fiscal</label>
+                        <input type="text" id="compra-nf" class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:outline-none focus:border-orange-500">
+                    </div>
+                    <div class="mb-3">
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Local de destino *</label>
+                        <select id="compra-local" required class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:outline-none focus:border-orange-500">
+                            <option value="deposito">Depósito</option><option value="loja">Loja</option>
+                        </select>
+                    </div>
+                    <div class="mb-3 md:col-span-2">
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Registrado por</label>
+                        <input type="text" id="compra-registrado-por" class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:outline-none focus:border-orange-500">
+                    </div>
+                </div>
+
+                <div class="flex justify-between items-center mt-2 mb-2">
+                    <h4 class="text-sm font-bold text-slate-700">Itens da compra</h4>
+                    <button type="button" onclick="adicionarItemCompra()" class="text-xs font-semibold text-orange-600 hover:text-orange-800 flex items-center gap-1">
+                        <i data-lucide="plus" class="w-3 h-3"></i> Adicionar item
+                    </button>
+                </div>
+                <div class="grid grid-cols-12 gap-2 text-xs font-semibold text-slate-500 mb-1 px-1">
+                    <span class="col-span-6">Produto</span><span class="col-span-2">Quantidade</span><span class="col-span-3">Custo unit. (R$)</span>
+                </div>
+                <div id="compra-itens" class="flex flex-col gap-2"></div>
+                <p class="text-right text-sm text-slate-600 mt-4">Total: <strong id="compra-total" class="text-slate-800">R$ 0,00</strong></p>
+                <p class="text-xs text-slate-500 mt-1">Cada item gera automaticamente uma entrada no estoque do local escolhido.</p>
+
+                <div class="flex justify-end gap-2 mt-5">
+                    <button type="button" onclick="closeModal('modal-compra')" class="px-4 py-2 text-sm text-slate-600 hover:bg-slate-100 rounded-lg">Cancelar</button>
+                    <button type="submit" class="px-4 py-2 text-sm bg-orange-600 text-white rounded-lg hover:bg-orange-700">Registrar compra</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="modal-compra-detalhe" class="fixed inset-0 bg-slate-900/50 hidden items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-xl p-6 w-full max-w-2xl shadow-xl max-h-[90vh] overflow-y-auto">
+            <h3 id="det-titulo" class="text-lg font-bold text-slate-800 mb-1">Compra</h3>
+            <p id="det-resumo" class="text-sm text-slate-500 mb-4"></p>
+            <table class="w-full text-left text-sm text-slate-600">
+                <thead class="bg-slate-50 border-b border-slate-200 text-slate-700 font-semibold uppercase text-xs">
+                    <tr><th class="p-3">Produto</th><th class="p-3">Qtd.</th><th class="p-3">Custo unit.</th><th class="p-3">Subtotal</th></tr>
+                </thead>
+                <tbody id="det-itens" class="divide-y divide-slate-100"></tbody>
+            </table>
+            <p class="text-right text-sm text-slate-600 mt-4">Total: <strong id="det-total" class="text-slate-800">—</strong></p>
+            <div class="flex justify-end mt-5">
+                <button type="button" onclick="closeModal('modal-compra-detalhe')" class="px-4 py-2 text-sm text-slate-600 hover:bg-slate-100 rounded-lg">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://127.0.0.1:8000';
+
+        lucide.createIcons();
+
+        const $ = (id) => document.getElementById(id);
+        const valor = (obj, ...chaves) => {
+            for (const chave of chaves) {
+                if (obj && obj[chave] !== undefined && obj[chave] !== null) return obj[chave];
+            }
+            return null;
+        };
+        const esc = (v) => String(v ?? '').replace(/[&<>"']/g, c => ({
+            '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'
+        }[c]));
+        const numero = (v) => Number(v ?? 0).toLocaleString('pt-BR', { maximumFractionDigits: 3 });
+        const moeda = (v) => Number(v ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+        async function api(path, options = {}) {
+            let response;
+            try {
+                response = await fetch(`${API_URL}${path}`, {
+                    ...options,
+                    headers: { ...(options.body ? {'Content-Type':'application/json'} : {}), ...(options.headers || {}) }
+                });
+            } catch (error) {
+                throw new Error('Não foi possível conectar à API. Confira se o backend está rodando em http://127.0.0.1:8000.');
+            }
+
+            const raw = await response.text();
+            let body = null;
+            try { body = raw ? JSON.parse(raw) : null; } catch { body = raw; }
+
+            if (!response.ok) {
+                const detail = body?.erro || body?.detail || body?.mensagem ||
+                    (typeof body === 'string' ? body : `Erro HTTP ${response.status}`);
+                throw new Error(detail);
+            }
+            return body;
+        }
+
+        function mostrarErro(error) {
+            console.error(error);
+            alert(error.message || 'Ocorreu um erro inesperado.');
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.content-view').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active-tab'));
+            $(`view-${tabId}`).classList.remove('hidden');
+            $(`tab-${tabId}`).classList.add('active-tab');
+
+            if (tabId === 'produtos') carregarProdutos();
+            if (tabId === 'reativar') carregarDesativados();
+            if (tabId === 'movimentacoes') carregarMovimentacoes();
+            if (tabId === 'alertas') carregarAlertas();
+            if (tabId === 'compras') carregarCompras();
+            if (tabId === 'fornecedores') carregarFornecedores();
+            if (tabId === 'categorias') carregarCategorias();
+            if (tabId === 'dashboard') carregarDashboard();
+        }
+
+        function openModal(id) {
+            const el = $(id);
+            el.classList.remove('hidden');
+            el.classList.add('flex');
+            if (id === 'modal-movimentacao') carregarOpcoesProdutos();
+            if (id === 'modal-produto') carregarOpcoesProdutoForm();
+            if (id === 'modal-compra') prepararCompra();
+        }
+
+        function closeModal(id) {
+            const el = $(id);
+            el.classList.add('hidden');
+            el.classList.remove('flex');
+        }
+
+        function produtoId(p) { return valor(p, 'produto_id', 'id'); }
+        function produtoNome(p) { return valor(p, 'produto_nome', 'nome') || 'Produto sem nome'; }
+        function produtoSaldo(p) { return valor(p, 'saldo_total', 'quantidade_total', 'quantidade') ?? 0; }
+        function produtoPreco(p) { return valor(p, 'produto_preco_venda', 'preco_venda', 'preco') ?? 0; }
+        function produtoCategoria(p) { return valor(p, 'categoria_nome', 'produto_categoria_nome', 'categoria') || '—'; }
+
+        async function carregarProdutos() {
+            try {
+                const data = await api('/produtos');
+                const produtos = Array.isArray(data) ? data : (data?.itens || data?.produtos || []);
+                $('lista-produtos').innerHTML = produtos.length ? produtos.map(p => {
+                    const id = produtoId(p);
+                    const ativo = valor(p, 'produto_ativo', 'ativo') !== 0 && valor(p, 'produto_ativo', 'ativo') !== false;
+                    const sku = valor(p, 'produto_sku', 'sku') || '—';
+                    return `<tr class="hover:bg-slate-50">
+                        <td class="p-4 font-mono text-xs">#${esc(id)}</td>
+                        <td class="p-4"><div class="font-semibold text-slate-800">${esc(produtoNome(p))}</div><div class="text-xs text-slate-400">${esc(sku)}</div></td>
+                        <td class="p-4">${esc(produtoCategoria(p))}</td>
+                        <td class="p-4">${numero(produtoSaldo(p))} ${esc(valor(p, 'produto_unidade', 'unidade') || '')}</td>
+                        <td class="p-4">${moeda(produtoPreco(p))}</td>
+                        <td class="p-4 text-center">
+                            <button onclick="${ativo ? 'desativarProduto' : 'reativarProduto'}(${Number(id)})" class="${ativo ? 'text-red-600 hover:text-red-800' : 'text-green-600 hover:text-green-800'} text-xs font-semibold">${ativo ? 'Desativar' : 'Reativar'}</button>
+                        </td>
+                    </tr>`;
+                }).join('') : '<tr><td colspan="6" class="p-6 text-center text-slate-500">Nenhum produto cadastrado.</td></tr>';
+                $('dash-total-produtos').innerText = produtos.length;
+                return produtos;
+            } catch (error) {
+                $('lista-produtos').innerHTML = `<tr><td colspan="6" class="p-6 text-center text-red-600">${esc(error.message)}</td></tr>`;
+                throw error;
+            }
+        }
+
+        async function salvarProduto(e) {
+            e.preventDefault();
+            const optionalNumber = id => $(id).value.trim() === '' ? null : Number($(id).value);
+            const payload = {
+                sku: $('prod-sku').value.trim() || null,
+                nome: $('prod-nome').value.trim(),
+                descricao: $('prod-descricao').value.trim() || null,
+                unidade: $('prod-unidade').value.trim() || 'un',
+                preco_custo: optionalNumber('prod-custo'),
+                preco_venda: optionalNumber('prod-venda'),
+                estoque_minimo: Number($('prod-minimo').value || 0),
+                estoque_maximo: optionalNumber('prod-maximo'),
+                categoria_id: optionalNumber('prod-categoria'),
+                fornecedor_id: optionalNumber('prod-fornecedor')
+            };
+            try {
+                await api('/produtos', { method: 'POST', body: JSON.stringify(payload) });
+                closeModal('modal-produto');
+                $('form-produto').reset();
+                $('prod-unidade').value = 'un';
+                $('prod-minimo').value = '0';
+                await carregarProdutos();
+                await carregarDashboard();
+                alert('Produto cadastrado com sucesso. Para adicionar saldo, registre uma entrada em Movimentações.');
+            } catch (error) { mostrarErro(error); }
+        }
+
+        async function desativarProduto(id) {
+            if (!confirm('Deseja desativar este produto? O histórico e os saldos serão preservados.')) return;
+            try {
+                await api(`/produtos/${id}/desativar`, { method: 'POST' });
+                await carregarProdutos();
+                await carregarDashboard();
+                carregarDesativados().catch(() => {});
+            } catch (error) { mostrarErro(error); }
+        }
+
+        async function reativarProduto(id) {
+            try {
+                await api(`/produtos/${id}/reativar`, { method: 'POST' });
+                await carregarProdutos();
+                await carregarDashboard();
+            } catch (error) { mostrarErro(error); }
+        }
+
+        async function carregarOpcoesProdutos() {
+            try {
+                const produtos = await api('/produtos');
+                const lista = Array.isArray(produtos) ? produtos : (produtos?.itens || []);
+                $('mov-produto').innerHTML = lista.map(p =>
+                    `<option value="${esc(produtoId(p))}">${esc(produtoNome(p))} — saldo ${numero(produtoSaldo(p))}</option>`
+                ).join('');
+                if (!lista.length) $('mov-produto').innerHTML = '<option value="">Cadastre um produto primeiro</option>';
+            } catch (error) {
+                $('mov-produto').innerHTML = '<option value="">Não foi possível carregar produtos</option>';
+                mostrarErro(error);
+            }
+        }
+
+        async function salvarMovimentacao(e) {
+            e.preventDefault();
+            const payload = {
+                produto_id: Number($('mov-produto').value),
+                local: $('mov-local').value,
+                tipo: $('mov-tipo').value,
+                quantidade: Number($('mov-quantidade').value),
+                observacao: $('mov-observacao').value.trim() || null,
+                registrado_por: $('mov-registrado-por').value.trim() || null
+            };
+            try {
+                await api('/movimentacoes', { method: 'POST', body: JSON.stringify(payload) });
+                closeModal('modal-movimentacao');
+                $('form-movimentacao').reset();
+                await carregarMovimentacoes();
+                await carregarProdutos();
+                await carregarAlertas();
+                alert('Movimentação registrada com sucesso.');
+            } catch (error) { mostrarErro(error); }
+        }
+
+        async function carregarMovimentacoes() {
+            try {
+                const data = await api('/movimentacoes?limite=200');
+                const lista = Array.isArray(data) ? data : (data?.itens || data?.movimentacoes || []);
+                $('lista-movimentacoes').innerHTML = lista.length ? lista.map(m => {
+                    const dataHora = valor(m, 'data_hora', 'movimentacao_data_hora', 'data');
+                    const tipo = valor(m, 'tipo', 'movimentacao_tipo') || '—';
+                    const nome = valor(m, 'produto_nome', 'nome_produto') || '—';
+                    return `<tr class="hover:bg-slate-50">
+                        <td class="p-4 text-xs text-slate-500">${dataHora ? new Date(dataHora).toLocaleString('pt-BR') : '—'}</td>
+                        <td class="p-4 font-medium text-slate-800">${esc(nome)}</td>
+                        <td class="p-4"><span class="px-2 py-0.5 rounded text-xs font-semibold ${tipo.includes('ENTRADA') ? 'bg-green-100 text-green-700' : tipo.includes('SAIDA') || tipo === 'PERDA' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'}">${esc(tipo)}</span></td>
+                        <td class="p-4">${numero(valor(m, 'quantidade', 'movimentacao_quantidade'))}</td>
+                        <td class="p-4 text-xs">${esc(valor(m, 'observacao', 'movimentacao_observacao') || '—')}</td>
+                    </tr>`;
+                }).join('') : '<tr><td colspan="5" class="p-6 text-center text-slate-500">Nenhuma movimentação encontrada.</td></tr>';
+            } catch (error) {
+                $('lista-movimentacoes').innerHTML = `<tr><td colspan="5" class="p-6 text-center text-red-600">${esc(error.message)}</td></tr>`;
+            }
+        }
+
+        async function carregarAlertas() {
+            try {
+                const resposta = await api('/alertas');
+                const grupos = [
+                    ...(resposta?.zerados || []).map(p => ({...p, _tipo:'Estoque zerado'})),
+                    ...(resposta?.baixos || []).map(p => ({...p, _tipo:'Estoque baixo'})),
+                    ...(resposta?.excesso || []).map(p => ({...p, _tipo:'Estoque em excesso'}))
+                ];
+                $('lista-alertas').innerHTML = grupos.length ? grupos.map(a => {
+                    const tipo = a._tipo;
+                    const baixo = tipo !== 'Estoque em excesso';
+                    return `<div class="${baixo ? 'bg-red-50 border-red-200' : 'bg-amber-50 border-amber-200'} border rounded-lg p-4 flex justify-between items-center">
+                        <div>
+                            <h4 class="font-bold ${baixo ? 'text-red-800' : 'text-amber-800'}">${esc(produtoNome(a))}</h4>
+                            <p class="text-xs ${baixo ? 'text-red-600' : 'text-amber-700'}">Saldo: ${numero(produtoSaldo(a))} | Mínimo: ${numero(valor(a, 'produto_estoque_minimo', 'estoque_minimo'))} | Máximo: ${valor(a, 'produto_estoque_maximo', 'estoque_maximo') == null ? '—' : numero(valor(a, 'produto_estoque_maximo', 'estoque_maximo'))}</p>
+                        </div>
+                        <span class="${baixo ? 'bg-red-200 text-red-800' : 'bg-amber-200 text-amber-800'} text-xs px-2 py-1 rounded font-semibold">${tipo}</span>
+                    </div>`;
+                }).join('') : '<p class="text-slate-500 text-sm">Nenhum alerta de estoque no momento.</p>';
+
+                const resumo = resposta?.resumo || {};
+                const total = Number(resumo.zerados || 0) + Number(resumo.baixos || 0);
+                $('alert-badge').innerText = total;
+                $('alert-badge').classList.toggle('hidden', total === 0);
+                $('dash-alertas-count').innerText = total;
+            } catch (error) {
+                $('lista-alertas').innerHTML = `<p class="text-red-600 text-sm">${esc(error.message)}</p>`;
+                throw error;
+            }
+        }
+
+        async function carregarDashboard() {
+            try {
+                const [produtos, alertas, fornecedores, categorias] = await Promise.all([
+                    api('/produtos'),
+                    api('/alertas'),
+                    api('/fornecedores'),
+                    api('/categorias')
+                ]);
+                const listaProdutos = Array.isArray(produtos) ? produtos : (produtos?.itens || []);
+                const listaFornecedores = Array.isArray(fornecedores) ? fornecedores : (fornecedores?.itens || []);
+                const listaCategorias = Array.isArray(categorias) ? categorias : (categorias?.itens || []);
+                const resumo = alertas?.resumo || {};
+                $('dash-total-produtos').innerText = listaProdutos.length;
+                $('dash-alertas-count').innerText = Number(resumo.zerados || 0) + Number(resumo.baixos || 0);
+                $('dash-fornecedores-count').innerText = listaFornecedores.length;
+                $('dash-categorias-count').innerText = listaCategorias.length;
+                const totalAlertas = Number(resumo.zerados || 0) + Number(resumo.baixos || 0);
+                $('alert-badge').innerText = totalAlertas;
+                $('alert-badge').classList.toggle('hidden', totalAlertas === 0);
+            } catch (error) {
+                console.error('Falha ao carregar dashboard:', error);
+                $('dash-total-produtos').innerText = '—';
+                $('dash-alertas-count').innerText = '—';
+                $('dash-fornecedores-count').innerText = '—';
+                $('dash-categorias-count').innerText = '—';
+            }
+        }
+
+        const cache = { fornecedores: [], categorias: [], produtos: [], compras: [] };
+        const listaDe = (d) => Array.isArray(d) ? d : (d?.itens || []);
+        const atualizarSilencioso = (...fns) => Promise.all(fns.map(fn => fn().catch(() => {})));
+
+        function dataBR(v) {
+            if (!v) return '—';
+            const m = String(v).match(/^(\d{4})-(\d{2})-(\d{2})/);
+            if (m) return `${m[3]}/${m[2]}/${m[1]}`;
+            const d = new Date(v);
+            return isNaN(d) ? esc(v) : d.toLocaleDateString('pt-BR');
+        }
+
+        function preencherSelect(id, lista, getId, getNome, vazio) {
+            $(id).innerHTML = (vazio != null ? `<option value="">${esc(vazio)}</option>` : '') +
+                lista.map(x => `<option value="${esc(getId(x))}">${esc(getNome(x))}</option>`).join('');
+        }
+
+        function categoriaId(c) { return valor(c, 'categoria_id', 'id'); }
+        function categoriaNomeDe(c) { return valor(c, 'categoria_nome', 'nome') || 'Sem nome'; }
+
+        async function carregarCategorias() {
+            try {
+                cache.categorias = listaDe(await api('/categorias'));
+                $('lista-categorias').innerHTML = cache.categorias.length ? cache.categorias.map(c => `
+                    <tr class="hover:bg-slate-50">
+                        <td class="p-4 font-mono text-xs">#${esc(categoriaId(c))}</td>
+                        <td class="p-4 font-semibold text-slate-800">${esc(categoriaNomeDe(c))}</td>
+                        <td class="p-4">${esc(valor(c, 'categoria_descricao', 'descricao') || '—')}</td>
+                        <td class="p-4 text-center"><button onclick="abrirCategoria(${Number(categoriaId(c))})" class="text-blue-600 hover:text-blue-800 text-xs font-semibold">Editar</button></td>
+                    </tr>`).join('')
+                    : '<tr><td colspan="4" class="p-6 text-center text-slate-500">Nenhuma categoria cadastrada.</td></tr>';
+                $('dash-categorias-count').innerText = cache.categorias.length;
+            } catch (error) {
+                $('lista-categorias').innerHTML = `<tr><td colspan="4" class="p-6 text-center text-red-600">${esc(error.message)}</td></tr>`;
+            }
+        }
+
+        function abrirCategoria(id = null) {
+            const c = id != null ? cache.categorias.find(x => String(categoriaId(x)) === String(id)) : null;
+            $('cat-id').value = c ? categoriaId(c) : '';
+            $('cat-titulo').innerText = c ? 'Editar Categoria' : 'Adicionar Categoria';
+            $('cat-nome').value = c ? categoriaNomeDe(c) : '';
+            $('cat-descricao').value = c ? (valor(c, 'categoria_descricao', 'descricao') || '') : '';
+            openModal('modal-categoria');
+        }
+
+        async function salvarCategoria(e) {
+            e.preventDefault();
+            const id = $('cat-id').value;
+            const payload = {
+                nome: $('cat-nome').value.trim(),
+                descricao: $('cat-descricao').value.trim() || null
+            };
+            try {
+                await api(id ? `/categorias/${id}` : '/categorias', { method: id ? 'PUT' : 'POST', body: JSON.stringify(payload) });
+                closeModal('modal-categoria');
+                await atualizarSilencioso(carregarCategorias, carregarProdutos);
+            } catch (error) { mostrarErro(error); }
+        }
+
+        function fornecedorId(f) { return valor(f, 'fornecedor_id', 'id'); }
+        function fornecedorNomeDe(f) { return valor(f, 'fornecedor_nome', 'nome') || 'Sem nome'; }
+
+        async function carregarFornecedores() {
+            try {
+                cache.fornecedores = listaDe(await api('/fornecedores'));
+                $('lista-fornecedores').innerHTML = cache.fornecedores.length ? cache.fornecedores.map(f => `
+                    <tr class="hover:bg-slate-50">
+                        <td class="p-4 font-mono text-xs">#${esc(fornecedorId(f))}</td>
+                        <td class="p-4 font-semibold text-slate-800">${esc(fornecedorNomeDe(f))}</td>
+                        <td class="p-4">${esc(valor(f, 'fornecedor_cnpj', 'cnpj') || '—')}</td>
+                        <td class="p-4">${esc(valor(f, 'fornecedor_telefone', 'telefone') || '—')}</td>
+                        <td class="p-4">${esc(valor(f, 'fornecedor_email', 'email') || '—')}</td>
+                        <td class="p-4 text-center"><button onclick="abrirFornecedor(${Number(fornecedorId(f))})" class="text-blue-600 hover:text-blue-800 text-xs font-semibold">Editar</button></td>
+                    </tr>`).join('')
+                    : '<tr><td colspan="6" class="p-6 text-center text-slate-500">Nenhum fornecedor cadastrado.</td></tr>';
+                $('dash-fornecedores-count').innerText = cache.fornecedores.length;
+            } catch (error) {
+                $('lista-fornecedores').innerHTML = `<tr><td colspan="6" class="p-6 text-center text-red-600">${esc(error.message)}</td></tr>`;
+            }
+        }
+
+        function abrirFornecedor(id = null) {
+            const f = id != null ? cache.fornecedores.find(x => String(fornecedorId(x)) === String(id)) : null;
+            $('forn-id').value = f ? fornecedorId(f) : '';
+            $('forn-titulo').innerText = f ? 'Editar Fornecedor' : 'Adicionar Fornecedor';
+            $('forn-nome').value = f ? fornecedorNomeDe(f) : '';
+            $('forn-cnpj').value = f ? (valor(f, 'fornecedor_cnpj', 'cnpj') || '') : '';
+            $('forn-telefone').value = f ? (valor(f, 'fornecedor_telefone', 'telefone') || '') : '';
+            $('forn-email').value = f ? (valor(f, 'fornecedor_email', 'email') || '') : '';
+            openModal('modal-fornecedor');
+        }
+
+        async function salvarFornecedor(e) {
+            e.preventDefault();
+            const id = $('forn-id').value;
+            const payload = {
+                nome: $('forn-nome').value.trim(),
+                cnpj: $('forn-cnpj').value.trim() || null,
+                telefone: $('forn-telefone').value.trim() || null,
+                email: $('forn-email').value.trim() || null
+            };
+            try {
+                await api(id ? `/fornecedores/${id}` : '/fornecedores', { method: id ? 'PUT' : 'POST', body: JSON.stringify(payload) });
+                closeModal('modal-fornecedor');
+                await atualizarSilencioso(carregarFornecedores, carregarCompras);
+            } catch (error) { mostrarErro(error); }
+        }
+
+        async function carregarOpcoesProdutoForm() {
+            try {
+                const [cats, forns] = await Promise.all([api('/categorias'), api('/fornecedores')]);
+                cache.categorias = listaDe(cats);
+                cache.fornecedores = listaDe(forns);
+                preencherSelect('prod-categoria', cache.categorias, categoriaId, categoriaNomeDe, 'Sem categoria');
+                preencherSelect('prod-fornecedor', cache.fornecedores, fornecedorId, fornecedorNomeDe, 'Sem fornecedor');
+            } catch (error) { mostrarErro(error); }
+        }
+
+        function compraId(c) { return valor(c, 'compras_id', 'compra_id', 'id'); }
+        function itemQtd(i) { return valor(i, 'itens_compra_quantidade', 'quantidade') ?? 0; }
+        function itemCusto(i) { return valor(i, 'itens_compra_custo_unit', 'custo_unit', 'custo_unitario') ?? 0; }
+        function totalDaCompra(c) {
+            const t = valor(c, 'total', 'compra_total', 'compras_total', 'valor_total');
+            if (t != null) return Number(t);
+            const itens = valor(c, 'itens');
+            return Array.isArray(itens) ? itens.reduce((a, i) => a + itemQtd(i) * itemCusto(i), 0) : null;
+        }
+        function nomeFornecedorDaCompra(c) {
+            const n = valor(c, 'fornecedor_nome');
+            if (n) return n;
+            const f = cache.fornecedores.find(x => String(fornecedorId(x)) === String(valor(c, 'fornecedor_id')));
+            return f ? fornecedorNomeDe(f) : '—';
+        }
+
+        async function carregarCompras() {
+            try {
+                const [compras, forns] = await Promise.all([api('/compras'), api('/fornecedores').catch(() => [])]);
+                cache.fornecedores = listaDe(forns);
+                cache.compras = listaDe(compras);
+                $('lista-compras').innerHTML = cache.compras.length ? cache.compras.map(c => {
+                    const total = totalDaCompra(c);
+                    return `<tr class="hover:bg-slate-50">
+                        <td class="p-4 font-mono text-xs">#${esc(compraId(c))}</td>
+                        <td class="p-4">${dataBR(valor(c, 'compras_data', 'compra_data', 'data'))}</td>
+                        <td class="p-4 font-semibold text-slate-800">${esc(nomeFornecedorDaCompra(c))}</td>
+                        <td class="p-4">${esc(valor(c, 'compras_nota_fiscal', 'nota_fiscal') || '—')}</td>
+                        <td class="p-4">${total == null ? '—' : moeda(total)}</td>
+                        <td class="p-4 text-center"><button onclick="verCompra(${Number(compraId(c))})" class="text-blue-600 hover:text-blue-800 text-xs font-semibold">Ver itens</button></td>
+                    </tr>`;
+                }).join('') : '<tr><td colspan="6" class="p-6 text-center text-slate-500">Nenhuma compra registrada.</td></tr>';
+            } catch (error) {
+                $('lista-compras').innerHTML = `<tr><td colspan="6" class="p-6 text-center text-red-600">${esc(error.message)}</td></tr>`;
+            }
+        }
+
+        async function verCompra(id) {
+            try {
+                const c = await api(`/compras/${id}`);
+                const itens = listaDe(valor(c, 'itens') || []);
+                $('det-titulo').innerText = `Compra #${compraId(c) ?? id}`;
+                $('det-resumo').innerText =
+                    `${dataBR(valor(c, 'compras_data', 'compra_data', 'data'))} · ${nomeFornecedorDaCompra(c)}` +
+                    (valor(c, 'compras_nota_fiscal', 'nota_fiscal') ? ` · NF ${valor(c, 'compras_nota_fiscal', 'nota_fiscal')}` : '');
+                let total = 0;
+                $('det-itens').innerHTML = itens.length ? itens.map(i => {
+                    const sub = itemQtd(i) * itemCusto(i);
+                    total += sub;
+                    return `<tr>
+                        <td class="p-3 font-medium text-slate-800">${esc(valor(i, 'produto_nome', 'nome') || ('Produto #' + valor(i, 'produto_id')))}</td>
+                        <td class="p-3">${numero(itemQtd(i))}</td>
+                        <td class="p-3">${moeda(itemCusto(i))}</td>
+                        <td class="p-3">${moeda(sub)}</td>
+                    </tr>`;
+                }).join('') : '<tr><td colspan="4" class="p-4 text-center text-slate-500">Sem itens.</td></tr>';
+                $('det-total').innerText = moeda(totalDaCompra(c) ?? total);
+                openModal('modal-compra-detalhe');
+            } catch (error) { mostrarErro(error); }
+        }
+
+        async function prepararCompra() {
+            try {
+                const [forns, prods] = await Promise.all([api('/fornecedores'), api('/produtos')]);
+                cache.fornecedores = listaDe(forns);
+                cache.produtos = listaDe(prods);
+            } catch (error) { mostrarErro(error); }
+            preencherSelect('compra-fornecedor', cache.fornecedores, fornecedorId, fornecedorNomeDe, 'Selecione o fornecedor');
+            $('compra-data').value = new Date().toLocaleDateString('sv-SE');
+            $('compra-nf').value = '';
+            $('compra-local').value = 'deposito';
+            $('compra-itens').innerHTML = '';
+            adicionarItemCompra();
+            atualizarTotalCompra();
+        }
+
+        function adicionarItemCompra() {
+            const opcoes = '<option value="">Selecione…</option>' + cache.produtos.map(p =>
+                `<option value="${esc(produtoId(p))}">${esc(produtoNome(p))}</option>`).join('');
+            const linha = document.createElement('div');
+            linha.className = 'item-compra grid grid-cols-12 gap-2 items-center';
+            linha.innerHTML = `
+                <select class="ic-produto col-span-6 border border-slate-300 rounded-lg p-2 text-sm" onchange="preencherCustoItem(this)">${opcoes}</select>
+                <input type="number" min="0.000001" step="any" class="ic-qtd col-span-2 border border-slate-300 rounded-lg p-2 text-sm" oninput="atualizarTotalCompra()">
+                <input type="number" min="0" step="0.01" class="ic-custo col-span-3 border border-slate-300 rounded-lg p-2 text-sm" oninput="atualizarTotalCompra()">
+                <button type="button" title="Remover item" onclick="this.parentElement.remove(); atualizarTotalCompra()" class="col-span-1 text-red-500 hover:text-red-700 text-lg leading-none">&times;</button>`;
+            $('compra-itens').appendChild(linha);
+        }
+
+        function preencherCustoItem(select) {
+            const p = cache.produtos.find(x => String(produtoId(x)) === select.value);
+            const custo = p ? valor(p, 'produto_preco_custo', 'preco_custo') : null;
+            if (custo != null) select.parentElement.querySelector('.ic-custo').value = custo;
+            atualizarTotalCompra();
+        }
+
+        function lerItensCompra() {
+            return [...document.querySelectorAll('#compra-itens .item-compra')].map(l => ({
+                produto_id: Number(l.querySelector('.ic-produto').value),
+                quantidade: Number(l.querySelector('.ic-qtd').value),
+                custo_unit: l.querySelector('.ic-custo').value === '' ? NaN : Number(l.querySelector('.ic-custo').value)
+            }));
+        }
+
+        function atualizarTotalCompra() {
+            const total = lerItensCompra().reduce((a, i) => a + ((i.quantidade > 0 && i.custo_unit >= 0) ? i.quantidade * i.custo_unit : 0), 0);
+            $('compra-total').innerText = moeda(total);
+        }
+
+        async function salvarCompra(e) {
+            e.preventDefault();
+            const itens = lerItensCompra();
+            if (!itens.length) return alert('Adicione ao menos um item à compra.');
+            if (itens.some(i => !i.produto_id || !(i.quantidade > 0) || !(i.custo_unit >= 0))) {
+                return alert('Em cada item, escolha o produto e informe quantidade maior que zero e custo válido.');
+            }
+            const payload = {
+                fornecedor_id: Number($('compra-fornecedor').value),
+                data: $('compra-data').value,
+                nota_fiscal: $('compra-nf').value.trim() || null,
+                local_destino: $('compra-local').value,
+                registrado_por: $('compra-registrado-por').value.trim() || null,
+                itens
+            };
+            try {
+                await api('/compras', { method: 'POST', body: JSON.stringify(payload) });
+                closeModal('modal-compra');
+                $('form-compra').reset();
+                await atualizarSilencioso(carregarCompras, carregarProdutos, carregarMovimentacoes, carregarAlertas, carregarDashboard);
+                alert('Compra registrada e estoque atualizado.');
+            } catch (error) { mostrarErro(error); }
+        }
+
+        let produtosDesativados = [];
+
+        function produtoEstaAtivo(p) {
+            const a = valor(p, 'produto_ativo', 'ativo');
+            return a !== 0 && a !== false;
+        }
+
+        async function carregarDesativados() {
+            try {
+                const data = await api('/produtos?incluir_desativados=true');
+                const todos = Array.isArray(data) ? data : (data?.itens || data?.produtos || []);
+                produtosDesativados = todos.filter(p => !produtoEstaAtivo(p));
+                atualizarBadgeDesativados();
+                renderDesativados();
+            } catch (error) {
+                $('lista-desativados').innerHTML = `<tr><td colspan="6" class="p-6 text-center text-red-600">${esc(error.message)}</td></tr>`;
+                throw error;
+            }
+        }
+
+        function atualizarBadgeDesativados() {
+            $('reativar-badge').innerText = produtosDesativados.length;
+            $('reativar-badge').classList.toggle('hidden', produtosDesativados.length === 0);
+        }
+
+        function renderDesativados() {
+            const termo = $('reativar-busca').value.trim().toLowerCase();
+            const lista = produtosDesativados.filter(p =>
+                !termo ||
+                produtoNome(p).toLowerCase().includes(termo) ||
+                String(valor(p, 'produto_sku', 'sku') || '').toLowerCase().includes(termo));
+
+            $('lista-desativados').innerHTML = lista.length ? lista.map(p => {
+                const id = produtoId(p);
+                const sku = valor(p, 'produto_sku', 'sku') || '—';
+                return `<tr class="hover:bg-slate-50">
+                    <td class="p-4 font-mono text-xs">#${esc(id)}</td>
+                    <td class="p-4"><div class="font-semibold text-slate-800">${esc(produtoNome(p))}</div><div class="text-xs text-slate-400">${esc(sku)}</div></td>
+                    <td class="p-4">${esc(produtoCategoria(p))}</td>
+                    <td class="p-4">${numero(produtoSaldo(p))} ${esc(valor(p, 'produto_unidade', 'unidade') || '')}</td>
+                    <td class="p-4">${moeda(produtoPreco(p))}</td>
+                    <td class="p-4 text-center">
+                        <button onclick="reativarDesativado(${Number(id)})" class="inline-flex items-center gap-1 bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition">
+                            <i data-lucide="rotate-ccw" class="w-3 h-3"></i> Reativar
+                        </button>
+                    </td>
+                </tr>`;
+            }).join('') : `<tr><td colspan="6" class="p-6 text-center text-slate-500">${
+                produtosDesativados.length ? 'Nenhum produto desativado corresponde à busca.' : 'Nenhum produto desativado.'}</td></tr>`;
+            lucide.createIcons();
+        }
+
+        async function reativarDesativado(id) {
+            if (!confirm('Deseja reativar este produto? Ele voltará às listagens e poderá ser movimentado.')) return;
+            try {
+                await api(`/produtos/${id}/reativar`, { method: 'POST' });
+                await carregarDesativados();
+                carregarProdutos().catch(() => {});
+                carregarDashboard();
+                carregarAlertas().catch(() => {});
+            } catch (error) { mostrarErro(error); }
+        }
+
+        carregarDashboard();
+        carregarDesativados().catch(() => {});
+    </script>
+</body>
+</html>
