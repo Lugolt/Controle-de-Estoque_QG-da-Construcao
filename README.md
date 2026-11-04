@@ -10,14 +10,26 @@ python aplicar_migracao.py           # leva o banco ao modelo da API (seguro rep
 uvicorn main:app --reload            # sobe a API
 ```
 
-```rodar em caso de erro
+Para o back-end abra http://127.0.0.1:8000/docs: o Swagger permite testar todas as rotas pelo navegador.
+
+
+## Rodar em caso de erro
+
+```
 Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 .venv\Scripts\Activate.ps1
 pip install -r requirements.txt
 python -m uvicorn main:app --reload
 ```
 
-Abra http://127.0.0.1:8000/docs: o Swagger permite testar todas as rotas pelo navegador.
+## Para o Front-end
+**Abra um terminal na pasta em que está o html do projeto e rode o comando abaixo e abra http://127.0.0.1:5173/interface_do_sistema_integrada.html**
+
+```
+python -m http.server 5173
+```
+
+
 
 ## Estrutura
 
